@@ -1,0 +1,174 @@
+.model small
+.stack 100h
+.data
+
+correct_username db 'admin', '$'
+correct_password db '1234', '$'
+
+input_username db 10 dup('$')
+input_password db 10 dup('$')
+
+welcome_msg db '*** Welcome to the Secure Login System ***$'
+enter_username_msg db 13,10,'Enter Username: $'
+enter_password_msg db 13,10,'Enter Password: $'
+access_granted_msg db 13,10,'Access Granted!$'
+access_denied_msg db 13,10,'Access Denied!$'
+attempts_exceeded_msg db 13,10,'Too many failed attempts. Access locked!$'
+
+newline db 13,10,'$'
+
+attempts_left db 3
+
+.code
+main:
+    mov ax, @data
+    mov ds, ax
+
+    ; Display welcome message
+    lea dx, welcome_msg
+    mov ah, 09h
+    int 21h
+
+login_attempt:
+    ; Check if attempts left
+    cmp attempts_left, 0
+    je lockout
+
+    ; Print newline
+    lea dx, newline
+    mov ah, 09h
+    int 21h
+
+    ; Ask for Username
+    lea dx, enter_username_msg
+    mov ah, 09h
+    int 21h
+
+    call read_input_username
+
+    ; Ask for Password
+    lea dx, enter_password_msg
+    mov ah, 09h
+    int 21h
+
+    call read_input_password
+
+    ; Compare username
+    lea si, input_username
+    lea di, correct_username
+    call compare_strings
+    cmp al, 0
+    jne wrong_credentials
+
+    ; Compare password
+    lea si, input_password
+    lea di, correct_password
+    call compare_strings
+    cmp al, 0
+    jne wrong_credentials
+
+    ; If both correct
+    lea dx, access_granted_msg
+    mov ah, 09h
+    int 21h
+    jmp exit_program
+
+wrong_credentials:
+    dec attempts_left
+    lea dx, access_denied_msg
+    mov ah, 09h
+    int 21h
+    jmp login_attempt
+
+lockout:
+    lea dx, attempts_exceeded_msg
+    mov ah, 09h
+    int 21h
+
+exit_program:
+    mov ah, 4Ch
+    int 21h
+
+; ---------------------------
+; Subroutine: read_input_username
+; ---------------------------
+read_input_username proc
+    mov cx, 0
+
+read_username_loop:
+    mov ah, 01h ; Read character
+    int 21h
+    cmp al, 13  ; Enter key pressed?
+    je done_reading_username
+
+    mov si, offset input_username
+    add si, cx
+    mov [si], al
+    inc cx
+    jmp read_username_loop
+
+done_reading_username:
+    mov si, offset input_username
+    add si, cx
+    mov byte ptr [si], '$'
+    ret
+read_input_username endp
+
+; ---------------------------
+; Subroutine: read_input_password (masked)
+; ---------------------------
+read_input_password proc
+    mov cx, 0
+
+read_password_loop:
+    mov ah, 01h ; Read character
+    int 21h
+    cmp al, 13  ; Enter key pressed?
+    je done_reading_password
+
+    mov si, offset input_password
+    add si, cx
+    mov [si], al
+    inc cx
+
+    ; Display '*'
+    mov dl, '*'
+    mov ah, 02h
+    int 21h
+    jmp read_password_loop
+
+done_reading_password:
+    mov si, offset input_password
+    add si, cx
+    mov byte ptr [si], '$'
+    ret
+read_input_password endp
+
+; ---------------------------
+; Subroutine: compare_strings
+; Compares two strings, returns AL=0 if equal, AL=1 if not equal
+; ---------------------------
+compare_strings proc
+compare_loop:
+    mov al, [si]
+    mov bl, [di]
+    cmp al, bl
+    jne not_equal
+
+    cmp al, '$'
+    je equal_strings
+
+    inc si
+    inc di
+    jmp compare_loop
+
+equal_strings:
+    mov al, 0
+    ret
+
+not_equal:
+    mov al, 1
+    ret
+compare_strings endp
+
+end main
