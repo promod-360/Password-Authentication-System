@@ -1,0 +1,24 @@
+# Password-Authentication-System
+Implement a basic authentication system using 8086 Assembly that validates username and password.  Demonstrate the use of DOS interrupts (INT 21h) for handling string output, character input, and program control.  Develop subroutines for input reading and string comparison to mimic secure login functionality.   8086 Assembly Language Programming
+Understanding and applying low-level instructions and syntax.
+String Handling and Comparison
+Manual character-by-character comparison using registers and loops.
+User Input Processing
+Reading keyboard input using INT 21h, storing and managing input strings.
+Replacing typed characters with asterisks (*) during password entry.
+Conditional and Loop Control
+Using CMP, JE, JNE and loops to manage login attempts.
+Leveraging DOS interrupts for displaying messages, reading input, and exiting the program.
+Displays welcome message
+
+Asks for username and password
+
+Compares with hardcoded credentials
+
+Masks password input with *
+
+Allows 3 login attempts
+
+Shows access granted/denied messages
+
+
